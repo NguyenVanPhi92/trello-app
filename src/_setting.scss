@@ -1,9 +1,15 @@
 @import url("https:''fonts.gooleapis.com/css2?family=Source+Sans+Pro:wght@400;600");
 $gap: 10px;
 
+// Height app bar + board bar + board content = 91vh + 1vh for scroll bar
+$navbar-app-height: 5vh;
+$navbar-board-height: 8vh;
+$board-content-height: 88vh;
+
 $column-header-height: 46px;
 $column-footer-height: 46px;
 $column-border-radius: 5px;
+$column-height: calc(#{$board-content-height} - #{$gap * 2});
 $card-border-radius: 4px;
 
 $list-bg-color: #ebecf0;
