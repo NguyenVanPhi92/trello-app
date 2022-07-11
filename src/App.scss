@@ -11,9 +11,8 @@ body {
 .trello-trungquandev-master {
   height: 100vh;
   overflow: hidden;
-  // display: grid;
-  // grid-template-rows: 40px 50px 1fr;
   background-color: $board-bg-color;
+  color: $app-main-text-color;
 
   .navbar-board {
     padding-left: $gap;
@@ -21,5 +20,10 @@ body {
     align-items: center;
     background-color: $board-bg-color;
     font-size: 1.1rem;
+  }
+
+  .icon {
+    font-size: 14px;
+    margin-right: 3px;
   }
 }
