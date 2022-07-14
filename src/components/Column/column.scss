@@ -6,7 +6,7 @@
   margin-left: $gap;
 
   > * {
-    background-color: $list-bg-color;
+    background-color: $colum-bg-color;
     color: $app-main-text-color;
     padding: 0 8px;
   }
@@ -56,8 +56,8 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      background-color: darken($list-bg-color, 15);
-      border-right: 5px solid $list-bg-color;
+      background-color: darken($colum-bg-color, 15);
+      border-right: 5px solid $colum-bg-color;
     }
 
     .card-ghost {
