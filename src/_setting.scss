@@ -13,10 +13,11 @@ $column-height: calc(#{$board-content-height} - #{$gap * 2});
 $card-border-radius: 4px;
 
 //color
-$list-bg-color: #ebecf0;
+$colum-bg-color: #ebecf0;
 $common-element-bg: rgba(255, 255, 255, 0.24);
 $board-bg-color: #0079bf;
 $app-main-text-color: #333;
+$alert-danger: #ee5253;
 
 //Screen
 $screen-lg: 1201px;
