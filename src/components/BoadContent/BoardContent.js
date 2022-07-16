@@ -24,6 +24,10 @@ const BoardContent = () => {
     []
   );
 
+  const toggleOpenNewColumnForm = () => {
+    setOpenNewColumnForm((state) => !state);
+  };
+
   const newColumnInputRef = useRef(null);
 
   useEffect(() => {
@@ -84,10 +88,6 @@ const BoardContent = () => {
     }
   };
 
-  const toggleOpenNewColumnForm = () => {
-    setOpenNewColumnForm((state) => !state);
-  };
-
   const addNewColumn = () => {
     if (!newColumnTitle) {
       newColumnInputRef.current.focus();
@@ -130,8 +130,9 @@ const BoardContent = () => {
       // remove column
       newColumns.splice(columnIndexToUpdate, 1);
     } else {
-      //update column info
+      //update or add new column info
       newColumns.splice(columnIndexToUpdate, 1, newColumnToUpdate);
+      // console.log(newColumnToUpdate);
     }
 
     let newBoard = { ...board };
@@ -194,10 +195,7 @@ const BoardContent = () => {
                 <Button variant="success" size="sm" onClick={addNewColumn}>
                   Add column
                 </Button>
-                <span
-                  className="cancel-new-column"
-                  onClick={toggleOpenNewColumnForm}
-                >
+                <span className="cancel-icon" onClick={toggleOpenNewColumnForm}>
                   <i className="fa fa-trash icon" />
                 </span>
               </Col>

@@ -1,7 +1,7 @@
 import Card from "components/Card/Card";
 import ConfirmModal from "components/Common/ConfirmModal";
-import React, { useCallback, useEffect, useState } from "react";
-import { Dropdown, Form } from "react-bootstrap";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Button, Dropdown, Form } from "react-bootstrap";
 import { Container, Draggable } from "react-smooth-dnd";
 import { mapOrder } from "utilities/sorts";
 import { MODAL_ACTION_CLOSE, MODAL_ACTION_CONFIRM } from "utilities/contans";
@@ -10,22 +10,42 @@ import {
   saveContentAfterPressEnter,
   selectAllInlineText,
 } from "utilities/contentEditTable";
+import { cloneDeep } from "lodash";
 
 const Column = (props) => {
   const { column, onCardDrop, onUpDateColumn } = props;
   const cards = mapOrder(column.cards, column.cardOrder, "id");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [openNewCardForm, setOpenNewCardForm] = useState(false);
   const [columnTitle, setColumnTile] = useState("");
   const handelColumnTitleChange = useCallback(
     (e) => setColumnTile(e.target.value),
     []
   );
+  const [newCardTitle, setNewCardTitle] = useState("");
+  const handleNewCardTitle = useCallback(
+    (e) => setNewCardTitle(e.target.value),
+    []
+  );
+  const newCardTextareaRef = useRef(null);
 
   useEffect(() => {
     setColumnTile(column.title);
   }, [column.title]);
 
+  // focus thẻ input
+  useEffect(() => {
+    if (newCardTextareaRef && newCardTextareaRef.current) {
+      newCardTextareaRef.current.focus();
+      newCardTextareaRef.current.select();
+    }
+  }, [openNewCardForm]);
+
   //handle
+
+  const toggleOpenNewCardForm = () => {
+    setOpenNewCardForm((state) => !state);
+  };
   const toggleConfirmModalAction = () => setShowConfirmModal(!showConfirmModal);
 
   const onConfirmModalAction = (type) => {
@@ -52,6 +72,30 @@ const Column = (props) => {
       title: columnTitle,
     };
     onUpDateColumn(newColumn);
+  };
+
+  const addNewCard = () => {
+    if (!newCardTitle) {
+      newCardTextareaRef.current.focus();
+      return;
+    }
+    const newCardToAdd = {
+      id: Math.random().toString(36).substring(2, 5), //5 random character
+      boardId: column.boardId,
+      columnId: column.id,
+      title: newCardTitle.trim(),
+      cover: null,
+    };
+
+    // console.log(column);
+    let newColumn = cloneDeep(column); // clone lại column use cloneDeep
+    newColumn.cards.push(newCardToAdd); // add new card mới
+    newColumn.cardOrder.push(newCardToAdd.id); // add id of card vào
+    // console.log(newColumn);
+
+    onUpDateColumn(newColumn);
+    setNewCardTitle("");
+    toggleOpenNewCardForm();
   };
 
   return (
@@ -114,11 +158,40 @@ const Column = (props) => {
             </Draggable>
           ))}
         </Container>
+
+        {openNewCardForm && (
+          <div className="add-new-card-area">
+            <Form.Control
+              className="textarea-enter-new-card"
+              type="text"
+              size="sm"
+              as="textarea"
+              rows="3"
+              placeholder="Enter a title for this card..."
+              ref={newCardTextareaRef}
+              onChange={handleNewCardTitle}
+              value={newCardTitle}
+              onKeyDown={(event) => event.key === "Enter" && addNewCard()}
+            />
+          </div>
+        )}
       </div>
       <footer>
-        <div className="footer-actions">
-          <i className="fa fa-plus icon" /> Add another
-        </div>
+        {openNewCardForm && (
+          <div className="add-new-card-actions">
+            <Button variant="success" size="sm" onClick={addNewCard}>
+              Add card
+            </Button>
+            <span className="cancel-icon" onClick={toggleOpenNewCardForm}>
+              <i className="fa fa-trash icon" />
+            </span>
+          </div>
+        )}
+        {!openNewCardForm && (
+          <div className="footer-actions" onClick={toggleOpenNewCardForm}>
+            <i className="fa fa-plus icon" /> Add another
+          </div>
+        )}
       </footer>
 
       {/* modal */}
