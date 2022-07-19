@@ -1,7 +1,7 @@
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import HTMLReactParser from "html-react-parser";
-import { MODAL_ACTION_CLOSE, MODAL_ACTION_CONFIRM } from "utilities/contans";
+import { MODAL_ACTION_CLOSE, MODAL_ACTION_CONFIRM } from "utilities/constants";
 
 function ConfirmModal(props) {
   const { title, content, show, onActions } = props;
