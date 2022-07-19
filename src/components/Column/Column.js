@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Dropdown, Form } from "react-bootstrap";
 import { Container, Draggable } from "react-smooth-dnd";
 import { mapOrder } from "utilities/sorts";
-import { MODAL_ACTION_CLOSE, MODAL_ACTION_CONFIRM } from "utilities/contans";
+import { MODAL_ACTION_CLOSE, MODAL_ACTION_CONFIRM } from "utilities/constants";
 import "./column.scss";
 import {
   saveContentAfterPressEnter,
@@ -14,7 +14,7 @@ import { cloneDeep } from "lodash";
 
 const Column = (props) => {
   const { column, onCardDrop, onUpDateColumn } = props;
-  const cards = mapOrder(column.cards, column.cardOrder, "id");
+  const cards = mapOrder(column.cards, column.cardOrder, "_id");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [openNewCardForm, setOpenNewCardForm] = useState(false);
   const [columnTitle, setColumnTile] = useState("");
@@ -82,7 +82,7 @@ const Column = (props) => {
     const newCardToAdd = {
       id: Math.random().toString(36).substring(2, 5), //5 random character
       boardId: column.boardId,
-      columnId: column.id,
+      columnId: column._id,
       title: newCardTitle.trim(),
       cover: null,
     };
@@ -90,7 +90,7 @@ const Column = (props) => {
     // console.log(column);
     let newColumn = cloneDeep(column); // clone lại column use cloneDeep
     newColumn.cards.push(newCardToAdd); // add new card mới
-    newColumn.cardOrder.push(newCardToAdd.id); // add id of card vào
+    newColumn.cardOrder.push(newCardToAdd._id); // add id of card vào
     // console.log(newColumn);
 
     onUpDateColumn(newColumn);
@@ -143,7 +143,7 @@ const Column = (props) => {
       <div className="card-list">
         <Container
           groupName="patrickDev-columns"
-          onDrop={(dropResult) => onCardDrop(column.id, dropResult)}
+          onDrop={(dropResult) => onCardDrop(column._id, dropResult)}
           getChildPayload={(index) => cards[index]}
           dragClass="card-ghost"
           dropClass="card-ghost-drop"

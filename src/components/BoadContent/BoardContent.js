@@ -8,11 +8,11 @@ import {
   Button,
 } from "react-bootstrap";
 import "./BoardContent.scss";
-import { initialData } from "actions/initalData";
 import { isEmpty } from "lodash";
 import { mapOrder } from "utilities/sorts";
 import { Container, Draggable } from "react-smooth-dnd";
-import { applyDrag } from "utilities/draoDrop";
+import { applyDrag } from "utilities/drapDrop";
+import { fetchBoardDetails } from "actions/ApiCall/index";
 
 const BoardContent = () => {
   const [board, setBoard] = useState({});
@@ -31,16 +31,12 @@ const BoardContent = () => {
   const newColumnInputRef = useRef(null);
 
   useEffect(() => {
-    const boardFromDB = initialData.boards.find(
-      (board) => board.id === "board-1"
-    );
-
-    if (boardFromDB) {
-      setBoard(boardFromDB);
-
-      //sort column
-      setColumns(mapOrder(boardFromDB.columns, boardFromDB.columnOrder, "id"));
-    }
+    const boardId = "62d552182419a1d3924afd66";
+    fetchBoardDetails(boardId).then((board) => {
+      setBoard(board);
+      //sort column theo columnOrder
+      setColumns(mapOrder(board.columns, board.columnOrder, "_id"));
+    });
   }, []);
 
   // focus thẻ input
@@ -66,7 +62,7 @@ const BoardContent = () => {
     newColumns = applyDrag(newColumns, dropResult);
 
     let newBoard = { ...board };
-    newBoard.columnOrder = newColumns.map((c) => c.id);
+    newBoard.columnOrder = newColumns.map((c) => c._id);
     newBoard.columns = newColumns;
 
     console.log(newBoard);
@@ -79,9 +75,9 @@ const BoardContent = () => {
     if (dropResult.removedIndex !== null || dropResult.addedIndex !== null) {
       let newColumns = [...columns];
 
-      let currentColumns = newColumns.find((c) => c.id === columnId);
+      let currentColumns = newColumns.find((c) => c._id === columnId);
       currentColumns.cards = applyDrag(currentColumns.cards, dropResult);
-      currentColumns.cardOrder = currentColumns.cards.map((i) => i.id);
+      currentColumns.cardOrder = currentColumns.cards.map((i) => i._id);
       // console.log(currentColumns);
 
       setColumns(newColumns);
@@ -96,7 +92,7 @@ const BoardContent = () => {
 
     const newColumnToAdd = {
       id: Math.random().toString(36).substring(2, 5), //5 random character
-      boardId: board.id,
+      boardId: board._id,
       title: newColumnTitle.trim(),
       cardOrder: [],
       cards: [],
@@ -106,7 +102,7 @@ const BoardContent = () => {
     newColumns.push(newColumnToAdd);
 
     let newBoard = { ...board };
-    newBoard.columnOrder = newColumns.map((c) => c.id);
+    newBoard.columnOrder = newColumns.map((c) => c._id);
     newBoard.columns = newColumns;
 
     console.log(newBoard);
@@ -119,11 +115,11 @@ const BoardContent = () => {
   };
 
   const onUpDateColumn = (newColumnToUpdate) => {
-    const columnIdToUpdate = newColumnToUpdate.id;
+    const columnIdToUpdate = newColumnToUpdate._id;
 
     let newColumns = [...columns];
     const columnIndexToUpdate = newColumns.findIndex(
-      (i) => i.id === columnIdToUpdate
+      (i) => i._id === columnIdToUpdate
     );
 
     if (newColumnToUpdate._destroy) {
@@ -136,7 +132,7 @@ const BoardContent = () => {
     }
 
     let newBoard = { ...board };
-    newBoard.columnOrder = newColumns.map((c) => c.id);
+    newBoard.columnOrder = newColumns.map((c) => c._id);
     newBoard.columns = newColumns;
 
     console.log(newBoard);
