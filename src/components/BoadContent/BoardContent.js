@@ -12,7 +12,7 @@ import { isEmpty } from "lodash";
 import { mapOrder } from "utilities/sorts";
 import { Container, Draggable } from "react-smooth-dnd";
 import { applyDrag } from "utilities/drapDrop";
-import { fetchBoardDetails } from "actions/ApiCall/index";
+import { createNewColumn, fetchBoardDetails } from "actions/ApiCall/index";
 
 const BoardContent = () => {
   const [board, setBoard] = useState({});
@@ -34,7 +34,7 @@ const BoardContent = () => {
     const boardId = "62d552182419a1d3924afd66";
     fetchBoardDetails(boardId).then((board) => {
       setBoard(board);
-      //sort column theo columnOrder
+      //sort column theo columnOrder and sort card theo cardOrder
       setColumns(mapOrder(board.columns, board.columnOrder, "_id"));
     });
   }, []);
@@ -57,7 +57,7 @@ const BoardContent = () => {
 
   //handle
   const onColumnDrop = (dropResult) => {
-    console.log(dropResult);
+    console.log({ dropResult });
     let newColumns = [...columns];
     newColumns = applyDrag(newColumns, dropResult);
 
@@ -65,7 +65,7 @@ const BoardContent = () => {
     newBoard.columnOrder = newColumns.map((c) => c._id);
     newBoard.columns = newColumns;
 
-    console.log(newBoard);
+    console.log({ newBoard });
 
     setColumns(newColumns);
     setBoard(newBoard);
@@ -91,30 +91,29 @@ const BoardContent = () => {
     }
 
     const newColumnToAdd = {
-      id: Math.random().toString(36).substring(2, 5), //5 random character
-      boardId: board._id,
       title: newColumnTitle.trim(),
-      cardOrder: [],
-      cards: [],
+      boardId: board._id,
     };
 
-    let newColumns = [...columns];
-    newColumns.push(newColumnToAdd);
+    createNewColumn(newColumnToAdd).then((column) => {
+      let newColumns = [...columns];
+      newColumns.push(column);
 
-    let newBoard = { ...board };
-    newBoard.columnOrder = newColumns.map((c) => c._id);
-    newBoard.columns = newColumns;
+      let newBoard = { ...board };
+      newBoard.columnOrder = newColumns.map((c) => c._id);
+      newBoard.columns = newColumns;
 
-    console.log(newBoard);
+      console.log({ newBoard });
 
-    setColumns(newColumns);
-    setBoard(newBoard);
-    setNewColumnTitle("");
+      setColumns(newColumns);
+      setBoard(newBoard);
+      setNewColumnTitle("");
 
-    toggleOpenNewColumnForm();
+      toggleOpenNewColumnForm();
+    });
   };
 
-  const onUpDateColumn = (newColumnToUpdate) => {
+  const onUpDateColumnState = (newColumnToUpdate) => {
     const columnIdToUpdate = newColumnToUpdate._id;
 
     let newColumns = [...columns];
@@ -135,7 +134,7 @@ const BoardContent = () => {
     newBoard.columnOrder = newColumns.map((c) => c._id);
     newBoard.columns = newColumns;
 
-    console.log(newBoard);
+    // console.log(newBoard);
 
     setColumns(newColumns);
     setBoard(newBoard);
@@ -160,7 +159,7 @@ const BoardContent = () => {
               <Column
                 column={column}
                 onCardDrop={onCardDrop}
-                onUpDateColumn={onUpDateColumn}
+                onUpDateColumnState={onUpDateColumnState}
               />
             </Draggable>
           ))}

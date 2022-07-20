@@ -28,7 +28,7 @@ function ConfirmModal(props) {
           variant="primary"
           onClick={() => onActions(MODAL_ACTION_CONFIRM)}
         >
-          Save Changes
+          Confirm
         </Button>
       </Modal.Footer>
     </Modal>
