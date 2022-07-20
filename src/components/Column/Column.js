@@ -1,27 +1,28 @@
+import { createNewCard, updateColumn } from "actions/ApiCall/index";
 import Card from "components/Card/Card";
 import ConfirmModal from "components/Common/ConfirmModal";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { cloneDeep } from "lodash";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Dropdown, Form } from "react-bootstrap";
 import { Container, Draggable } from "react-smooth-dnd";
-import { mapOrder } from "utilities/sorts";
 import { MODAL_ACTION_CLOSE, MODAL_ACTION_CONFIRM } from "utilities/constants";
-import "./column.scss";
 import {
   saveContentAfterPressEnter,
   selectAllInlineText,
 } from "utilities/contentEditTable";
-import { cloneDeep } from "lodash";
+import { mapOrder } from "utilities/sorts";
+import "./column.scss";
 
 const Column = (props) => {
-  const { column, onCardDrop, onUpDateColumn } = props;
+  const { column, onCardDrop, onUpDateColumnState } = props;
   const cards = mapOrder(column.cards, column.cardOrder, "_id");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [openNewCardForm, setOpenNewCardForm] = useState(false);
   const [columnTitle, setColumnTile] = useState("");
-  const handelColumnTitleChange = useCallback(
-    (e) => setColumnTile(e.target.value),
-    []
-  );
+  const handelColumnTitleChange = (e) => {
+    console.log("e.target.value: ", e.target.value);
+    setColumnTile(e.target.value);
+  };
   const [newCardTitle, setNewCardTitle] = useState("");
   const handleNewCardTitle = useCallback(
     (e) => setNewCardTitle(e.target.value),
@@ -48,8 +49,8 @@ const Column = (props) => {
   };
   const toggleConfirmModalAction = () => setShowConfirmModal(!showConfirmModal);
 
+  // remove column title
   const onConfirmModalAction = (type) => {
-    console.log(type);
     if (type === MODAL_ACTION_CLOSE) {
       //do something..
     }
@@ -60,42 +61,55 @@ const Column = (props) => {
         ...column,
         _destroy: true,
       };
-      onUpDateColumn(newColumn);
+
+      //call api update column
+      updateColumn(newColumn._id, newColumn).then((updatedColumn) => {
+        onUpDateColumnState(updatedColumn);
+      });
     }
     toggleConfirmModalAction();
   };
 
   // update title column
   const handelColumnTitleBlur = () => {
-    const newColumn = {
-      ...column,
-      title: columnTitle,
-    };
-    onUpDateColumn(newColumn);
+    // khi title có thay đổi thì mói callApi update
+    console.log(columnTitle !== column.title);
+    if (columnTitle !== column.title) {
+      console.log(columnTitle !== column.title);
+      const newColumn = {
+        ...column,
+        title: columnTitle,
+      };
+
+      //call api update column
+      updateColumn(newColumn._id, newColumn).then((updatedColumn) => {
+        updatedColumn.cards = newColumn.cards;
+        onUpDateColumnState(updatedColumn);
+      });
+    }
   };
 
+  // add new card
   const addNewCard = () => {
     if (!newCardTitle) {
       newCardTextareaRef.current.focus();
       return;
     }
     const newCardToAdd = {
-      id: Math.random().toString(36).substring(2, 5), //5 random character
-      boardId: column.boardId,
       columnId: column._id,
       title: newCardTitle.trim(),
-      cover: null,
+      boardId: column.boardId,
     };
 
-    // console.log(column);
-    let newColumn = cloneDeep(column); // clone lại column use cloneDeep
-    newColumn.cards.push(newCardToAdd); // add new card mới
-    newColumn.cardOrder.push(newCardToAdd._id); // add id of card vào
-    // console.log(newColumn);
+    createNewCard(newCardToAdd).then((card) => {
+      let newColumn = cloneDeep(column); // clone lại column use cloneDeep
+      newColumn.cards.push(card); // add new card mới
+      newColumn.cardOrder.push(card._id); // add id of card vào
 
-    onUpDateColumn(newColumn);
-    setNewCardTitle("");
-    toggleOpenNewCardForm();
+      onUpDateColumnState(newColumn);
+      setNewCardTitle("");
+      toggleOpenNewCardForm();
+    });
   };
 
   return (
