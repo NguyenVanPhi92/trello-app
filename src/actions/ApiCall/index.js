@@ -1,11 +1,15 @@
-import axios from "axios";
-import { API_ROOT } from "utilities/constants";
+import axios from 'axios';
+import { API_ROOT } from 'utilities/constants';
+
+//UPDATE BOARD
+export const updateBoard = async (id, data) => {
+  const request = await axios.put(`${API_ROOT}/v1/boards/${id}`, data);
+  return request.data;
+};
 
 // GET ONE BOARD FULL
 export const fetchBoardDetails = async (id) => {
   const request = await axios.get(`${API_ROOT}/v1/boards/${id}`);
-  // console.log("data: ", request.data);
-
   return request.data;
 };
 
@@ -24,5 +28,11 @@ export const updateColumn = async (id, data) => {
 // ADD NEW CARD
 export const createNewCard = async (data) => {
   const request = await axios.post(`${API_ROOT}/v1/cards`, data);
+  return request.data;
+};
+
+// UPDATE OR REMOVE CARD
+export const updateCard = async (id, data) => {
+  const request = await axios.put(`${API_ROOT}/v1/cards/${id}`, data);
   return request.data;
 };

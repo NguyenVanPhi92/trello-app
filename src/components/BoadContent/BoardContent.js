@@ -1,28 +1,19 @@
-import Column from "components/Column/Column";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Container as BootstrapContainer,
-  Row,
-  Col,
-  Form,
-  Button,
-} from "react-bootstrap";
-import "./BoardContent.scss";
-import { isEmpty } from "lodash";
-import { mapOrder } from "utilities/sorts";
-import { Container, Draggable } from "react-smooth-dnd";
-import { applyDrag } from "utilities/drapDrop";
-import { createNewColumn, fetchBoardDetails } from "actions/ApiCall/index";
+import Column from 'components/Column/Column';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Container as BootstrapContainer, Row, Col, Form, Button } from 'react-bootstrap';
+import './BoardContent.scss';
+import { cloneDeep, isEmpty } from 'lodash';
+import { mapOrder } from 'utilities/sorts';
+import { Container, Draggable } from 'react-smooth-dnd';
+import { applyDrag } from 'utilities/drapDrop';
+import { createNewColumn, fetchBoardDetails, updateBoard, updateCard, updateColumn } from 'actions/ApiCall/index';
 
 const BoardContent = () => {
   const [board, setBoard] = useState({});
   const [columns, setColumns] = useState([]);
   const [openNewColumnForm, setOpenNewColumnForm] = useState(false);
-  const [newColumnTitle, setNewColumnTitle] = useState("");
-  const onNewColumnTitleChange = useCallback(
-    (e) => setNewColumnTitle(e.target.value),
-    []
-  );
+  const [newColumnTitle, setNewColumnTitle] = useState('');
+  const onNewColumnTitleChange = useCallback((e) => setNewColumnTitle(e.target.value), []);
 
   const toggleOpenNewColumnForm = () => {
     setOpenNewColumnForm((state) => !state);
@@ -31,11 +22,11 @@ const BoardContent = () => {
   const newColumnInputRef = useRef(null);
 
   useEffect(() => {
-    const boardId = "62d552182419a1d3924afd66";
+    const boardId = '62d552182419a1d3924afd66';
     fetchBoardDetails(boardId).then((board) => {
       setBoard(board);
       //sort column theo columnOrder and sort card theo cardOrder
-      setColumns(mapOrder(board.columns, board.columnOrder, "_id"));
+      setColumns(mapOrder(board.columns, board.columnOrder, '_id'));
     });
   }, []);
 
@@ -49,7 +40,7 @@ const BoardContent = () => {
 
   if (isEmpty(board)) {
     return (
-      <div className="not-found" style={{ padding: "10px", color: "white" }}>
+      <div className="not-found" style={{ padding: '10px', color: 'white' }}>
         Board not found!
       </div>
     );
@@ -57,30 +48,57 @@ const BoardContent = () => {
 
   //handle
   const onColumnDrop = (dropResult) => {
-    console.log({ dropResult });
-    let newColumns = [...columns];
+    let newColumns = cloneDeep(columns); // use cloneDeep clone lại mảng columns
     newColumns = applyDrag(newColumns, dropResult);
 
-    let newBoard = { ...board };
+    let newBoard = cloneDeep(board); // use cloneDeep clone lại đối tượng boards
     newBoard.columnOrder = newColumns.map((c) => c._id);
     newBoard.columns = newColumns;
 
-    console.log({ newBoard });
-
     setColumns(newColumns);
     setBoard(newBoard);
+
+    //Call API update columnOrder in board details
+    // update vị trí của columns trong board
+    updateBoard(newBoard._id, newBoard).catch((error) => {
+      console.log('Error updatedBoard ', error);
+      // khi kéo thả columns xảy ra lỗi thì xét lại giá trị ban đầu
+      setColumns(columns);
+      setBoard(board);
+    });
   };
 
   const onCardDrop = (columnId, dropResult) => {
     if (dropResult.removedIndex !== null || dropResult.addedIndex !== null) {
-      let newColumns = [...columns];
+      let newColumns = cloneDeep(columns);
 
       let currentColumns = newColumns.find((c) => c._id === columnId);
       currentColumns.cards = applyDrag(currentColumns.cards, dropResult);
       currentColumns.cardOrder = currentColumns.cards.map((i) => i._id);
-      // console.log(currentColumns);
 
       setColumns(newColumns);
+      if (dropResult.removedIndex !== null && dropResult.addedIndex !== null) {
+        /**kéo thả card trong 1 column
+         * Action: move cards inside its column
+         * 1 Call API update cardOrder in current column
+         */
+        // chỉ bắt trường hợp khi lỗi
+        updateColumn(currentColumns._id, currentColumns).catch(() => setColumns(newColumns));
+      } else {
+        /**kéo thả card ngoài column
+         * Action: move cards between tow columns
+         * 1 Call API update cardOrder in current column
+         */
+        updateColumn(currentColumns._id, currentColumns).catch(() => setColumns(newColumns));
+
+        if (dropResult.addedIndex !== null) {
+          let currentCard = cloneDeep(dropResult.payload);
+          currentCard.columnId = currentColumns._id;
+
+          // 2 Call API update columnId in current card
+          updateCard(currentCard._id, currentCard);
+        }
+      }
     }
   };
 
@@ -103,11 +121,9 @@ const BoardContent = () => {
       newBoard.columnOrder = newColumns.map((c) => c._id);
       newBoard.columns = newColumns;
 
-      console.log({ newBoard });
-
       setColumns(newColumns);
       setBoard(newBoard);
-      setNewColumnTitle("");
+      setNewColumnTitle('');
 
       toggleOpenNewColumnForm();
     });
@@ -117,9 +133,7 @@ const BoardContent = () => {
     const columnIdToUpdate = newColumnToUpdate._id;
 
     let newColumns = [...columns];
-    const columnIndexToUpdate = newColumns.findIndex(
-      (i) => i._id === columnIdToUpdate
-    );
+    const columnIndexToUpdate = newColumns.findIndex((i) => i._id === columnIdToUpdate);
 
     if (newColumnToUpdate._destroy) {
       // remove column
@@ -133,8 +147,6 @@ const BoardContent = () => {
     let newBoard = { ...board };
     newBoard.columnOrder = newColumns.map((c) => c._id);
     newBoard.columns = newColumns;
-
-    // console.log(newBoard);
 
     setColumns(newColumns);
     setBoard(newBoard);
@@ -151,16 +163,12 @@ const BoardContent = () => {
           dropPlaceholder={{
             animationDuration: 150,
             showOnTop: true,
-            className: "column-drop-preview",
+            className: 'column-drop-preview',
           }}
         >
           {columns?.map((column, index) => (
             <Draggable key={index}>
-              <Column
-                column={column}
-                onCardDrop={onCardDrop}
-                onUpDateColumnState={onUpDateColumnState}
-              />
+              <Column column={column} onCardDrop={onCardDrop} onUpDateColumnState={onUpDateColumnState} />
             </Draggable>
           ))}
         </Container>
@@ -185,7 +193,7 @@ const BoardContent = () => {
                   ref={newColumnInputRef}
                   value={newColumnTitle}
                   onChange={onNewColumnTitleChange}
-                  onKeyDown={(event) => event.key === "Enter" && addNewColumn()}
+                  onKeyDown={(event) => event.key === 'Enter' && addNewColumn()}
                 />
                 <Button variant="success" size="sm" onClick={addNewColumn}>
                   Add column
